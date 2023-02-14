@@ -1,0 +1,14 @@
+{
+    "model": "base",
+    "language": "english",
+    "source_name": "STT",
+    "socket_host": "127.0.0.1",
+    "socket_port": 4455,
+    "socket_password": "secret",
+    "energy_threshold": null,
+    "clear_timeout": 20.0,
+    "record_timeout": 2.0,
+    "phrase_timeout": 5.0,
+    "microphone_index": null,
+    "use_cpu": false
+}
