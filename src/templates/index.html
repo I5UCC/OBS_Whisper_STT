@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>OBSWSTT</title>
+</head>
+<style>
+  body {
+    font-family: 'Arial', monospace;
+    color: white;
+    font-size: 48px;
+    font-weight: 700;
+  }
+</style>
+
+<body>
+  <div id="transcript" style="position: absolute; bottom: 0px;"></div>
+  <script>
+    function getTranscript() {
+      fetch("http://127.0.0.1:5000/transcript").then(function (response) {
+        return response.json();
+      }).then(function (data) {
+        console.log(data);
+        document.getElementById("transcript").innerHTML = data;
+      }).catch(function (err) {
+        console.log('Fetch Error: ', err);
+      });
+      window.scrollTo(0, document.body.scrollHeight);
+    }
+    setInterval(getTranscript, 200);
+  </script>
+</body>
+
+</html>

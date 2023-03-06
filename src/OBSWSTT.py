@@ -7,7 +7,9 @@ import json
 from queue import Queue
 from time import sleep, time
 import numpy as np
-import obsws_python as obs
+import waitress
+import kthread
+from flask import Flask, jsonify, render_template
 
 
 def get_absolute_path(relative_path):
@@ -22,6 +24,9 @@ def clear_screen():
 
 
 def main():
+    global text
+    global server_thread
+    
     CONFIG_PATH = get_absolute_path('config.json')
     CONFIG = json.load(open(CONFIG_PATH))
 
@@ -36,10 +41,6 @@ def main():
     model = CONFIG["model"]
     language = CONFIG["language"]
     energy_threshold = CONFIG["energy_threshold"]
-    source_name = CONFIG["source_name"]
-    obs_client = obs.ReqClient(host=CONFIG["socket_host"], port=CONFIG["socket_port"], password=CONFIG["socket_password"])
-    
-    obs_client.set_input_settings(source_name, {'text': ''}, True)
 
     source = sr.Microphone(sample_rate=16000, device_index=int(CONFIG['microphone_index']) if CONFIG['microphone_index'] else None)
 
@@ -91,21 +92,35 @@ def main():
 
                 clear_screen()
                 print(text)
-                obs_client.set_input_settings(source_name, {'text': text}, True)
 
                 phrase_time = time()
             elif not cleared and phrase_time and time_last - phrase_time > clear_timeout:
                 cleared = True
                 clear_screen()
-                obs_client.set_input_settings(source_name, {'text': ''}, True)
             elif not phrase_end and phrase_time and time_last - phrase_time > phrase_timeout:
                 phrase_end = True
                 last_sample = bytes()
 
             sleep(0.1)
         except KeyboardInterrupt:
+            server_thread.kill()
             break
 
+text = ""
+server_thread = None
+app= Flask(__name__)
 
-if __name__ == "__main__":
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route("/transcript", methods=["GET"])
+def transcript():
+    global text
+    return jsonify(text)
+
+if __name__=='__main__':
+    server = waitress.create_server(app, host="127.0.0.1", port=5000)
+    server_thread = kthread.KThread(target=server.run)
+    server_thread.start()
     main()
